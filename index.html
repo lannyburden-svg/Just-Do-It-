@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Minimalist To-Do</title>
     
-    <!-- PWA Capabilities for iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="My Tasks">
     
-    <!-- Web App Manifest embedded inline for zero-configuration hosting -->
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Minimalist%20To-Do%22,%22short_name%22:%22Tasks%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23f8f9fa%22,%22theme_color%22:%22%234f46e5%22}">
 
     <style>
@@ -33,7 +31,6 @@
             padding: 20px;
             display: flex;
             justify-content: center;
-            /* Prevents bounce stretching scroll on iOS */
             overscroll-behavior: none; 
         }
 
@@ -44,7 +41,6 @@
             padding: 24px;
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            /* Soft spacing for iOS notch/home indicator if inside app mode */
             padding-top: calc(env(safe-area-inset-top) + 20px);
         }
 
@@ -55,24 +51,36 @@
             font-weight: 700;
         }
 
-        .input-group {
+        .input-block {
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
-        input[type="text"] {
-            flex: 1;
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"], input[type="date"] {
             padding: 12px 16px;
             border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 16px;
             outline: none;
             -webkit-appearance: none;
+            background-color: var(--card-bg);
+            color: var(--text-main);
         }
 
-        input[type="text"]:focus {
-            border-color: var(--accent);
+        input[type="text"] {
+            flex: 1;
+        }
+
+        input[type="date"] {
+            width: 160px;
+            font-family: inherit;
         }
 
         button {
@@ -115,12 +123,23 @@
             flex: 1;
         }
 
+        .task-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
         .task-text {
             font-size: 16px;
             word-break: break-word;
         }
 
-        .completed .task-text {
+        .task-date-badge {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .completed .task-text, .completed .task-date-badge {
             text-decoration: line-through;
             color: var(--text-muted);
         }
@@ -172,16 +191,20 @@
             font-size: 14px;
         }
 
-        .subtask-input-row button {
-            padding: 8px 12px;
-            font-size: 13px;
-        }
-
         input[type="checkbox"] {
             width: 20px;
             height: 20px;
             cursor: pointer;
             accent-color: var(--accent);
+        }
+        
+        .notification-btn {
+            background-color: #6c757d;
+            font-size: 12px;
+            padding: 6px 12px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            display: none;
         }
     </style>
 </head>
@@ -189,10 +212,14 @@
 
 <div class="container">
     <h1>My Tasks</h1>
+    <button id="enableNotifications" class="notification-btn" onclick="requestNotificationPermission()">🔔 Enable Task Reminders</button>
     
-    <div class="input-group">
-        <input type="text" id="mainTaskInput" placeholder="Add a new main task..." onkeydown="if(event.key === 'Enter') addMainTask()">
-        <button onclick="addMainTask()">Add</button>
+    <div class="input-block">
+        <div class="input-row">
+            <input type="text" id="mainTaskInput" placeholder="Add a new main task..." onkeydown="if(event.key === 'Enter') addMainTask()">
+            <input type="date" id="mainTaskDate">
+        </div>
+        <button onclick="addMainTask()" style="width: 100%;">Add Task</button>
     </div>
 
     <ul id="taskList" class="task-list"></ul>
@@ -201,6 +228,22 @@
 <script>
     let tasks = JSON.parse(localStorage.getItem('todo_tasks')) || [];
 
+    // Initialize notification button display status
+    if ('Notification' in window && Notification.permission !== 'granted') {
+        document.getElementById('enableNotifications').style.display = 'inline-block';
+    }
+
+    function requestNotificationPermission() {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    document.getElementById('enableNotifications').style.display = 'none';
+                    alert('Alarms enabled! You will be notified at 10:30 AM on task due dates.');
+                }
+            });
+        }
+    }
+
     function saveTasks() {
         localStorage.setItem('todo_tasks', JSON.stringify(tasks));
         renderTasks();
@@ -208,19 +251,30 @@
 
     function addMainTask() {
         const input = document.getElementById('mainTaskInput');
+        const dateInput = document.getElementById('mainTaskDate');
         const text = input.value.trim();
+        const dueDate = dateInput.value; // Format: YYYY-MM-DD
+
         if (!text) return;
 
         tasks.push({
             id: Date.now().toString(),
             text: text,
             completed: false,
+            dueDate: dueDate || null,
+            alarmTriggered: false,
             subtasks: [],
             showSubtaskInput: false
         });
 
         input.value = '';
+        dateInput.value = '';
         saveTasks();
+        
+        // Request notification permission if they haven't explicitly chosen yet
+        if ('Notification' in window && Notification.permission === 'default') {
+            requestNotificationPermission();
+        }
     }
 
     function toggleMainTask(id) {
@@ -288,6 +342,13 @@
         saveTasks();
     }
 
+    function formatDateDisplay(dateString) {
+        if (!dateString) return '';
+        const parts = dateString.split('-');
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
     function renderTasks() {
         const listEl = document.getElementById('taskList');
         listEl.innerHTML = '';
@@ -296,11 +357,16 @@
             const itemLi = document.createElement('li');
             itemLi.className = `task-item ${task.completed ? 'completed' : ''}`;
 
+            const dateDisplay = task.dueDate ? `<span class="task-date-badge">📅 Due: ${formatDateDisplay(task.dueDate)} (Alarm 10:30 AM)</span>` : '';
+
             let html = `
                 <div class="task-main-row">
                     <div class="task-content">
                         <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleMainTask('${task.id}')">
-                        <span class="task-text">${task.text}</span>
+                        <div class="task-text-container">
+                            <span class="task-text">${task.text}</span>
+                            ${dateDisplay}
+                        </div>
                     </div>
                     <div class="actions">
                         <button class="btn-sm" onclick="toggleSubtaskInput('${task.id}')">+ Subtask</button>
@@ -339,6 +405,36 @@
             listEl.appendChild(itemLi);
         });
     }
+
+    // Alarm Background Checker Engine
+    function checkAlarms() {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+        const now = new Date();
+        
+        tasks.forEach(task => {
+            if (task.dueDate && !task.completed && !task.alarmTriggered) {
+                // Parse due date parts
+                const parts = task.dueDate.split('-');
+                // Create a target date object specifically forced to 10:30:00 AM local time
+                const alarmTime = new Date(parts[0], parts[1] - 1, parts[2], 10, 30, 0);
+
+                // If current time matches or has passed 10:30 AM on that specific day
+                if (now >= alarmTime) {
+                    new Notification("Task Reminder!", {
+                        body: `"${task.text}" is due today!`,
+                        icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234f46e5"><circle cx="12" cy="12" r="10"/></svg>'
+                    });
+                    
+                    task.alarmTriggered = true; // Avoid double triggering
+                    localStorage.setItem('todo_tasks', JSON.stringify(tasks));
+                }
+            }
+        });
+    }
+
+    // Run the background check loop every 15 seconds to look for due matches
+    setInterval(checkAlarms, 15000);
 
     renderTasks();
 
