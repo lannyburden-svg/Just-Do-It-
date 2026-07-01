@@ -6,55 +6,80 @@
     <title>Minimalist To-Do</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="My Tasks">
     
-    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Minimalist%20To-Do%22,%22short_name%22:%22Tasks%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23f8f9fa%22,%22theme_color%22:%22%234f46e5%22}">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Minimalist%20To-Do%22,%22short_name%22:%22Tasks%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230b0f19%22,%22theme_color%22:%22%238b5cf6%22}">
 
     <style>
         :root {
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-main: #212529;
-            --text-muted: #6c757d;
-            --accent: #4f46e5;
-            --accent-hover: #4338ca;
-            --border: #e9ecef;
-            --danger: #dc3545;
+            --bg-overlay: rgba(11, 15, 25, 0.7);
+            --card-bg: rgba(255, 255, 255, 0.07);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --danger: #ef4444;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
+            background-image: url('https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: var(--text-main);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
-            overscroll-behavior: none; 
+            overscroll-behavior: none;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* Ambient overall tint layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-overlay);
+            z-index: 0;
         }
 
         .container {
+            position: relative;
+            z-index: 1;
             width: 100%;
             max-width: 600px;
             background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             padding-top: calc(env(safe-area-inset-top) + 20px);
+            align-self: flex-start;
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 26px;
             margin-top: 0;
             margin-bottom: 20px;
             font-weight: 700;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .input-block {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 24px;
         }
 
@@ -64,14 +89,15 @@
         }
 
         input[type="text"], input[type="date"] {
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
             font-size: 16px;
             outline: none;
             -webkit-appearance: none;
-            background-color: var(--card-bg);
+            background-color: rgba(0, 0, 0, 0.3);
             color: var(--text-main);
+            transition: border-color 0.2s, background-color 0.2s;
         }
 
         input[type="text"] {
@@ -79,20 +105,31 @@
         }
 
         input[type="date"] {
-            width: 160px;
+            width: 150px;
             font-family: inherit;
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus {
+            border-color: var(--accent);
+            background-color: rgba(0, 0, 0, 0.5);
         }
 
         button {
             background-color: var(--accent);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
+            padding: 14px 20px;
+            border-radius: 10px;
             font-size: 15px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
+            transition: background-color 0.2s;
             -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
         }
 
         .task-list {
@@ -103,10 +140,11 @@
 
         .task-item {
             margin-bottom: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 14px;
-            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s;
         }
 
         .task-main-row {
@@ -135,13 +173,21 @@
 
         .task-date-badge {
             font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 2px;
+            color: #a78bfa;
+            margin-top: 4px;
+            font-weight: 500;
         }
 
-        .completed .task-text, .completed .task-date-badge {
+        .completed .task-text {
             text-decoration: line-through;
             color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .completed .task-date-badge {
+            color: var(--text-muted);
+            opacity: 0.5;
+            text-decoration: line-through;
         }
 
         .actions {
@@ -150,25 +196,30 @@
         }
 
         .btn-sm {
-            padding: 6px 10px;
+            padding: 6px 12px;
             font-size: 12px;
             border-radius: 6px;
-            background-color: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border);
+            background-color: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            box-shadow: none;
+        }
+
+        .btn-sm:hover {
+            background-color: rgba(255,255,255,0.15);
         }
 
         .btn-delete:hover {
-            background-color: #f8d7da;
+            background-color: rgba(239, 68, 68, 0.2);
             color: var(--danger);
-            border-color: #f5c2c7;
+            border-color: rgba(239, 68, 68, 0.4);
         }
 
         .subtask-list {
             list-style: none;
-            margin: 12px 0 0 24px;
+            margin: 14px 0 0 24px;
             padding: 0;
-            border-left: 2px solid var(--border);
+            border-left: 2px solid rgba(255,255,255,0.1);
             padding-left: 14px;
         }
 
@@ -176,7 +227,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 10px;
+            margin-top: 12px;
         }
 
         .subtask-input-row {
@@ -191,20 +242,31 @@
             font-size: 14px;
         }
 
+        .subtask-input-row button {
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+
         input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             cursor: pointer;
             accent-color: var(--accent);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--card-border);
         }
         
         .notification-btn {
-            background-color: #6c757d;
+            background-color: rgba(255, 255, 255, 0.1);
             font-size: 12px;
-            padding: 6px 12px;
-            margin-bottom: 15px;
-            border-radius: 4px;
+            padding: 8px 14px;
+            margin-bottom: 18px;
+            border-radius: 6px;
             display: none;
+            width: 100%;
+            box-shadow: none;
+            border: 1px solid var(--card-border);
         }
     </style>
 </head>
@@ -212,14 +274,14 @@
 
 <div class="container">
     <h1>My Tasks</h1>
-    <button id="enableNotifications" class="notification-btn" onclick="requestNotificationPermission()">🔔 Enable Task Reminders</button>
+    <button id="enableNotifications" class="notification-btn" onclick="requestNotificationPermission()">🔔 Enable Task Reminders (10:30 AM)</button>
     
     <div class="input-block">
         <div class="input-row">
             <input type="text" id="mainTaskInput" placeholder="Add a new main task..." onkeydown="if(event.key === 'Enter') addMainTask()">
             <input type="date" id="mainTaskDate">
         </div>
-        <button onclick="addMainTask()" style="width: 100%;">Add Task</button>
+        <button onclick="addMainTask()">Add Task</button>
     </div>
 
     <ul id="taskList" class="task-list"></ul>
@@ -228,9 +290,8 @@
 <script>
     let tasks = JSON.parse(localStorage.getItem('todo_tasks')) || [];
 
-    // Initialize notification button display status
     if ('Notification' in window && Notification.permission !== 'granted') {
-        document.getElementById('enableNotifications').style.display = 'inline-block';
+        document.getElementById('enableNotifications').style.display = 'block';
     }
 
     function requestNotificationPermission() {
@@ -238,7 +299,6 @@
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
                     document.getElementById('enableNotifications').style.display = 'none';
-                    alert('Alarms enabled! You will be notified at 10:30 AM on task due dates.');
                 }
             });
         }
@@ -253,7 +313,7 @@
         const input = document.getElementById('mainTaskInput');
         const dateInput = document.getElementById('mainTaskDate');
         const text = input.value.trim();
-        const dueDate = dateInput.value; // Format: YYYY-MM-DD
+        const dueDate = dateInput.value;
 
         if (!text) return;
 
@@ -271,7 +331,6 @@
         dateInput.value = '';
         saveTasks();
         
-        // Request notification permission if they haven't explicitly chosen yet
         if ('Notification' in window && Notification.permission === 'default') {
             requestNotificationPermission();
         }
@@ -357,7 +416,7 @@
             const itemLi = document.createElement('li');
             itemLi.className = `task-item ${task.completed ? 'completed' : ''}`;
 
-            const dateDisplay = task.dueDate ? `<span class="task-date-badge">📅 Due: ${formatDateDisplay(task.dueDate)} (Alarm 10:30 AM)</span>` : '';
+            const dateDisplay = task.dueDate ? `<span class="task-date-badge">⏰ Due: ${formatDateDisplay(task.dueDate)} at 10:30 AM</span>` : '';
 
             let html = `
                 <div class="task-main-row">
@@ -406,7 +465,6 @@
         });
     }
 
-    // Alarm Background Checker Engine
     function checkAlarms() {
         if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
@@ -414,31 +472,25 @@
         
         tasks.forEach(task => {
             if (task.dueDate && !task.completed && !task.alarmTriggered) {
-                // Parse due date parts
                 const parts = task.dueDate.split('-');
-                // Create a target date object specifically forced to 10:30:00 AM local time
                 const alarmTime = new Date(parts[0], parts[1] - 1, parts[2], 10, 30, 0);
 
-                // If current time matches or has passed 10:30 AM on that specific day
                 if (now >= alarmTime) {
                     new Notification("Task Reminder!", {
                         body: `"${task.text}" is due today!`,
-                        icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234f46e5"><circle cx="12" cy="12" r="10"/></svg>'
+                        icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238b5cf6"><circle cx="12" cy="12" r="10"/></svg>'
                     });
                     
-                    task.alarmTriggered = true; // Avoid double triggering
+                    task.alarmTriggered = true;
                     localStorage.setItem('todo_tasks', JSON.stringify(tasks));
                 }
             }
         });
     }
 
-    // Run the background check loop every 15 seconds to look for due matches
     setInterval(checkAlarms, 15000);
-
     renderTasks();
 
-    // Inline minimal Service Worker registration to enable iOS standalone mode
     if ('serviceWorker' in navigator) {
         const swCode = `self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request)); });`;
         const blob = new Blob([swCode], {type: 'application/javascript'});
