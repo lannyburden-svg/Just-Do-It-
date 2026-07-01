@@ -15,9 +15,9 @@
 
     <style>
         :root {
-            --bg-overlay: rgba(11, 15, 25, 0.7);
-            --card-bg: rgba(255, 255, 255, 0.07);
-            --card-border: rgba(255, 255, 255, 0.1);
+            --bg-overlay: rgba(11, 15, 25, 0.75);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.12);
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --accent: #8b5cf6;
@@ -33,7 +33,7 @@
             background-attachment: fixed;
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: center;
             overscroll-behavior: none;
@@ -58,14 +58,15 @@
             width: 100%;
             max-width: 600px;
             background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 24px;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 20px;
             border-radius: 16px;
             border: 1px solid var(--card-border);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             padding-top: calc(env(safe-area-inset-top) + 20px);
             align-self: flex-start;
+            box-sizing: border-box;
         }
 
         h1 {
@@ -74,102 +75,106 @@
             margin-bottom: 20px;
             font-weight: 700;
             letter-spacing: -0.5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
+        /* HARD FORCED VERTICAL BLOCK STACKING FOR INPUT FIELDS */
         .input-block {
             display: flex;
             flex-direction: column;
             gap: 12px;
             margin-bottom: 24px;
+            width: 100%;
         }
 
         .input-row {
             display: flex;
-            gap: 10px;
+            flex-direction: column; /* Force stack input field over date field on mobile screens */
+            gap: 12px;
+            width: 100%;
         }
 
         input[type="text"], input[type="date"] {
-            padding: 14px 16px;
+            padding: 14px;
             border: 1px solid var(--card-border);
             border-radius: 10px;
             font-size: 16px;
             outline: none;
             -webkit-appearance: none;
-            background-color: rgba(0, 0, 0, 0.3);
+            background-color: rgba(0, 0, 0, 0.4);
             color: var(--text-main);
-            transition: border-color 0.2s, background-color 0.2s;
-        }
-
-        input[type="text"] {
-            flex: 1;
-        }
-
-        input[type="date"] {
-            width: 150px;
-            font-family: inherit;
+            box-sizing: border-box;
+            width: 100% !important; /* Force true 100% screen width expansion */
         }
 
         input[type="text"]:focus, input[type="date"]:focus {
             border-color: var(--accent);
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
         }
 
-        button {
+        .btn-add-main {
+            width: 100%;
             background-color: var(--accent);
             color: white;
             border: none;
-            padding: 14px 20px;
+            padding: 14px;
             border-radius: 10px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
             -webkit-tap-highlight-color: transparent;
             box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-        }
-
-        button:hover {
-            background-color: var(--accent-hover);
+            box-sizing: border-box;
         }
 
         .task-list {
             list-style: none;
             padding: 0;
             margin: 0;
+            width: 100%;
         }
 
         .task-item {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             border: 1px solid var(--card-border);
             border-radius: 12px;
-            padding: 16px;
-            background: rgba(0, 0, 0, 0.2);
-            transition: background-color 0.2s;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.25);
+            box-sizing: border-box;
         }
 
+        /* FORCED STACKING FOR TASK ROW IF DISPLAY SPACE IS SQUEEZED */
         .task-main-row {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column; /* Stacks text block vertically above action buttons */
             gap: 12px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        /* Desktop/larger screens scale back up */
+        @media (min-width: 480px) {
+            .input-row { flex-direction: row; }
+            input[type="date"] { width: 160px !important; }
+            .task-main-row { flex-direction: row; align-items: center; justify-content: space-between; }
         }
 
         .task-content {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
-            flex: 1;
+            width: 100%;
         }
 
         .task-text-container {
             display: flex;
             flex-direction: column;
+            flex: 1;
         }
 
         .task-text {
             font-size: 16px;
             word-break: break-word;
+            line-height: 1.4;
         }
 
         .task-date-badge {
@@ -179,35 +184,26 @@
             font-weight: 500;
         }
 
-        .completed .task-text {
+        .completed .task-text, .completed .task-date-badge {
             text-decoration: line-through;
-            color: var(--text-muted);
-            opacity: 0.6;
-        }
-
-        .completed .task-date-badge {
             color: var(--text-muted);
             opacity: 0.5;
-            text-decoration: line-through;
         }
 
         .actions {
             display: flex;
             gap: 8px;
+            width: 100%;
+            justify-content: flex-end; /* Push buttons to right inside block rows */
         }
 
         .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 6px;
-            background-color: rgba(255,255,255,0.05);
+            padding: 8px 14px;
+            font-size: 13px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.06);
             color: var(--text-main);
             border: 1px solid var(--card-border);
-            box-shadow: none;
-        }
-
-        .btn-sm:hover {
-            background-color: rgba(255,255,255,0.15);
         }
 
         .btn-delete:hover {
@@ -218,10 +214,11 @@
 
         .subtask-list {
             list-style: none;
-            margin: 14px 0 0 24px;
+            margin: 14px 0 0 16px;
             padding: 0;
-            border-left: 2px solid rgba(255,255,255,0.1);
-            padding-left: 14px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            padding-left: 12px;
+            width: calc(100% - 16px);
         }
 
         .subtask-item {
@@ -229,23 +226,14 @@
             align-items: center;
             justify-content: space-between;
             margin-top: 12px;
+            gap: 10px;
         }
 
         .subtask-input-row {
             margin-top: 12px;
-            margin-left: 24px;
+            margin-left: 16px;
             display: flex;
             gap: 8px;
-        }
-
-        .subtask-input-row input {
-            padding: 8px 12px;
-            font-size: 14px;
-        }
-
-        .subtask-input-row button {
-            padding: 8px 14px;
-            font-size: 13px;
         }
 
         input[type="checkbox"] {
@@ -253,21 +241,20 @@
             height: 22px;
             cursor: pointer;
             accent-color: var(--accent);
-            border-radius: 6px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--card-border);
+            flex-shrink: 0; /* Prevents checkbox from flattening */
+            margin-top: 2px;
         }
         
         .notification-btn {
             background-color: rgba(255, 255, 255, 0.1);
-            font-size: 12px;
-            padding: 8px 14px;
+            font-size: 13px;
+            padding: 10px;
             margin-bottom: 18px;
-            border-radius: 6px;
+            border-radius: 8px;
             display: none;
             width: 100%;
-            box-shadow: none;
             border: 1px solid var(--card-border);
+            color: white;
         }
     </style>
 </head>
@@ -282,7 +269,7 @@
             <input type="text" id="mainTaskInput" placeholder="Add a new main task..." onkeydown="if(event.key === 'Enter') addMainTask()">
             <input type="date" id="mainTaskDate">
         </div>
-        <button onclick="addMainTask()">Add Task</button>
+        <button class="btn-add-main" onclick="addMainTask()">Add Task</button>
     </div>
 
     <ul id="taskList" class="task-list"></ul>
@@ -310,7 +297,6 @@
         renderTasks();
     }
 
-    // Double check system time matches 10:30 bounds
     function addMainTask() {
         const input = document.getElementById('mainTaskInput');
         const dateInput = document.getElementById('mainTaskDate');
@@ -380,6 +366,7 @@
         saveTasks();
     }
 
+    // Toggle sub task checkbox mapping logic
     function toggleSubtask(mainTaskId, subtaskId) {
         tasks = tasks.map(task => {
             if (task.id === mainTaskId) {
@@ -457,7 +444,7 @@
                 html += `
                     <div class="subtask-input-row">
                         <input type="text" id="${inputId}" placeholder="Add subtask..." onkeydown="if(event.key === 'Enter') addSubtask('${task.id}', '${inputId}')">
-                        <button onclick="addSubtask('${task.id}', '${inputId}')">Add</button>
+                        <button class="btn-sm" onclick="addSubtask('${task.id}', '${inputId}')">Add</button>
                     </div>
                 `;
             }
